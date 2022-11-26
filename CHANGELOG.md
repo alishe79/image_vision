@@ -1,3 +1,5 @@
-## 0.0.1
+## 1.0.0
 
-* TODO: Describe initial release.
+* Tagging & Classification images
+* Detect faces in image
+* Recognition face
