@@ -1,6 +1,6 @@
 name: image_vision
-description: A new Flutter project by sensifai for offline image tagging & face recognition.
-version: 0.0.1
+description: Flutter package for on-device tagging image, detect, recognition & register faces ;
+version: 1.0.0
 homepage: https://github.com/alishe79/image_vision.git
 
 environment:
