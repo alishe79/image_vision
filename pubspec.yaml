@@ -1,7 +1,7 @@
 name: image_vision
 description: A new Flutter project by sensifai for offline image tagging & face recognition.
 version: 0.0.1
-homepage:
+homepage: https://github.com/alishe79/image_vision.git
 
 environment:
   sdk: '>=2.18.4 <3.0.0'
