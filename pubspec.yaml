@@ -1,6 +1,6 @@
 name: image_vision
 description: Flutter package for on-device tagging image, detect, recognition & register faces ;
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/alishe79/image_vision.git
 
 environment:

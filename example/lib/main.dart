@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:developer' as dev;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -66,13 +67,10 @@ class _MyAppState extends State<MyApp> {
       var rec = await ImageVision.recognizeFace(Uint8List.fromList(png));
       var split = rec["confidence"].toString().split(".");
       var number = split[0];
-      if (int.parse(number) < 1){
-        rec["title"] = "face_not_found";
-        rec["confidence"] = "0.0";
-        return rec;
-      } else {
-        return rec ;
+      if (kDebugMode){
+        dev.log(rec.toString());
       }
+      return rec ;
     }
 
     return {};
@@ -145,8 +143,12 @@ class _MyAppState extends State<MyApp> {
                 // if face not found you can register it
                 await register(/** You can use any name for face **/ "Amir", faces[0], file);
               } else {
+                if (face["distance"] > 1.0){
+                  await register(/** You can use any name for face **/ "Ali", faces[0], file);
+                } else {
+                  // dev.log(face.toString());
+                }
                 // if face is detected
-                dev.log(face.toString());
               }
             }
           },

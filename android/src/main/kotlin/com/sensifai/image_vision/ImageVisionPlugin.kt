@@ -13,6 +13,7 @@ import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mlkit.vision.face.FaceLandmark.LandmarkType
 import com.sensifai.image_vision.env.Logger
 import com.sensifai.image_vision.ml.Model
 import com.sensifai.image_vision.tflite.SimilarityClassifier
@@ -139,9 +140,9 @@ class ImageVisionPlugin: FlutterPlugin, MethodCallHandler {
       "detect_faces" -> {
         val byteArrayImage: ByteArray = call.argument<ByteArray>("byteImage") ?: return
         val options = FaceDetectorOptions.Builder()
-          .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-          .setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-          .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+          .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+          .setContourMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+          .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
           .build()
 
         val detector: FaceDetector = FaceDetection.getClient(options)
@@ -163,7 +164,14 @@ class ImageVisionPlugin: FlutterPlugin, MethodCallHandler {
               json += "    \"right\": ${face.boundingBox.right},\n"
               json += "    \"bottom\": ${face.boundingBox.bottom},\n"
               json += "    \"width\": ${face.boundingBox.width()},\n"
-              json += "    \"height\": ${face.boundingBox.height()}\n"
+              json += "    \"height\": ${face.boundingBox.height()},\n"
+              json += "    \"smiling_probability\": ${face.smilingProbability},\n"
+              json += "    \"right_eye_open_probability\": ${face.rightEyeOpenProbability},\n"
+              json += "    \"left_eye_open_probability\": ${face.leftEyeOpenProbability},\n"
+              json += "    \"head_euler_angle_X\": ${face.headEulerAngleX},\n"
+              json += "    \"head_euler_angle_Y\": ${face.headEulerAngleY},\n"
+              json += "    \"head_euler_angle_Z\": ${face.headEulerAngleZ},\n"
+              json += "    \"tracking_id\": ${face.trackingId}\n"
               json += "}"
               if (i != (faces.size - 1)) {
                 json += ","
@@ -175,7 +183,7 @@ class ImageVisionPlugin: FlutterPlugin, MethodCallHandler {
             result.success(json)
 
           }
-        )
+          )
       }
       "recognize_face" -> {
         val faceBA: ByteArray = call.argument<ByteArray>("byteImage") ?: return
@@ -192,44 +200,50 @@ class ImageVisionPlugin: FlutterPlugin, MethodCallHandler {
           }
           val res = resultsAux[0]
           val title = res.title
-          val conf = res.distance ;
+          val conf = res.distance.toDouble()
           if (title == "?"){
             val map: HashMap<String, Any> = HashMap()
             map["title"] = "face_not_found"
             map["confidence"] = conf
-            map["confidenceString"] = conf
             result.success(map)
             return
           }
 
-          if (conf < 1.0f){
-            if (res.id.equals("0")) {
-              val map: HashMap<String, Any> = HashMap()
-              map["title"] = title.toString()
-              map["confidence"] = conf
-              map["confidenceString"] = conf
-              result.success(map)
-            } else {
-              val map: HashMap<String, Any> = HashMap()
-              map["title"] = "face_not_found"
-              map["confidence"] = conf
-              map["confidenceString"] = conf
-              result.success(map)
+          if (res.id == "0") {
+            val map: HashMap<String, Any> = HashMap()
+            map["title"] = title.toString()
+            map["confidence"] = conf
+            map["distance"] = res.distance
+            var all: String = ""
+            all += "[\n"
+            for (i in resultsAux.indices){
+              all += "  {\n"
+              all += "    \"id\": \"${resultsAux[i].id}\",\n"
+              all += "    \"distance\": ${resultsAux[i].distance},\n"
+              all += "    \"title\": \"${resultsAux[i].title}\",\n"
+              all += "    \"color\": ${resultsAux[i].color},\n"
+              all += "    \"extra\": \"${resultsAux[i].extra}\"\n"
+              all += "  }"
+              if (i == (resultsAux.size - 1)){
+                all += "\n"
+              } else {
+                all += ",\n"
+              }
             }
-
+            all += "]"
+            map["result"] = all ;
+            result.success(map)
           } else {
             val map: HashMap<String, Any> = HashMap()
             map["title"] = "face_not_found"
             map["confidence"] = conf
-            map["confidenceString"] = conf
             result.success(map)
           }
 
         } else {
           val map: HashMap<String, Any> = HashMap()
-          map["title"] = "face_not_found"
+          map["title"] = "face_detector_is_null"
           map["confidence"] = 0.0
-          map["confidenceString"] = "0.0"
           result.success(map)
         }
       }
